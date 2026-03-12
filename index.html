@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compfu AI - Smart Product Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--s:#ec4899;--a:#14b8a6;--d:#0f172a;--dl:#1e293b;--g:#64748b;--gl:#94a3b8;--w:#fff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
+body{font-family:'Inter',sans-serif;background:var(--d);color:var(--w);min-height:100vh}
+header{position:sticky;top:0;z-index:100;padding:1rem;background:rgba(15,23,42,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1)}
+nav{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.logo{display:flex;align-items:center;gap:.5rem;font-size:1.4rem;font-weight:800}
+.logo i{background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo span{background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.search-box{display:flex;flex:1;max-width:500px;background:var(--dl);border-radius:12px;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.search-box input{flex:1;padding:.75rem 1rem;background:0;border:0;color:var(--w);font-size:.9rem;outline:0}
+.search-box input::placeholder{color:var(--g)}
+.search-box button{padding:.75rem 1.25rem;background:linear-gradient(135deg,var(--p),var(--s));border:0;color:var(--w);cursor:pointer}
+.cats{display:flex;gap:.5rem;padding:1rem;max-width:1400px;margin:0 auto;flex-wrap:wrap}
+.cat{padding:.5rem 1rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:50px;color:var(--gl);font-size:.8rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:.4rem}
+.cat:hover,.cat.on{background:linear-gradient(135deg,var(--p),var(--s));border-color:transparent;color:var(--w)}
+.brands{padding:0 1rem;max-width:1400px;margin:0 auto 1rem}
+.brands-title{font-size:.9rem;color:var(--gl);margin-bottom:.75rem}
+.brands-list{display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.5rem}
+.brand{min-width:80px;padding:.75rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;text-align:center;cursor:pointer;transition:.2s}
+.brand:hover,.brand.on{background:rgba(99,102,241,.15);border-color:var(--p)}
+.brand img{width:32px;height:32px;object-fit:contain;margin-bottom:.25rem}
+.brand span{font-size:.7rem;display:block;color:var(--gl)}
+main{max-width:1400px;margin:0 auto;padding:0 1rem 100px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:.2s;position:relative}
+.card:hover{transform:translateY(-3px);border-color:rgba(99,102,241,.4)}
+.card.sel{border:2px solid var(--p);background:rgba(99,102,241,.1)}
+.card.sel::after{content:'✓';position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem}
+.card-img{height:120px;background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));display:flex;align-items:center;justify-content:center;padding:.75rem}
+.card-img img{max-height:100%;max-width:100%;object-fit:contain}
+.card-body{padding:.75rem}
+.card-brand{font-size:.65rem;color:var(--p);text-transform:uppercase;letter-spacing:.5px}
+.card-name{font-size:.85rem;font-weight:600;margin:.25rem 0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:2.2em}
+.card-price{font-size:1rem;font-weight:700;color:var(--a)}
+.card-rating{font-size:.75rem;color:var(--warn);margin-top:.25rem}
+.card-rating span{color:var(--g)}
+.bar{position:fixed;bottom:0;left:0;right:0;background:var(--dl);border-top:1px solid rgba(255,255,255,.1);padding:1rem;display:none;z-index:100}
+.bar.show{display:block}
+.bar-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.bar-items{display:flex;gap:.5rem;flex-wrap:wrap}
+.bar-item{display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;background:rgba(255,255,255,.05);border-radius:8px;font-size:.8rem}
+.bar-item img{width:24px;height:24px;object-fit:contain}
+.bar-item .x{cursor:pointer;color:var(--err);margin-left:.25rem}
+.bar-btn{padding:.75rem 1.5rem;background:linear-gradient(135deg,var(--p),var(--s));border:0;border-radius:10px;color:var(--w);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.5rem}
+.bar-btn:disabled{opacity:.5;cursor:not-allowed}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;overflow-y:auto;padding:1rem}
+.overlay.show{display:block}
+.modal{max-width:1100px;margin:0 auto;background:var(--dl);border-radius:20px;overflow:hidden}
+.modal-head{padding:1.25rem;background:rgba(99,102,241,.1);display:flex;justify-content:space-between;align-items:center}
+.modal-head h2{font-size:1.2rem;display:flex;align-items:center;gap:.5rem}
+.modal-close{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.1);border:0;color:var(--w);cursor:pointer;font-size:1rem}
+.modal-body{padding:1.5rem}
+.ai-box{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(236,72,153,.1));border:1px solid rgba(99,102,241,.2);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem}
+.ai-head{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+.ai-ico{width:36px;height:36px;background:linear-gradient(135deg,var(--p),var(--s));border-radius:8px;display:flex;align-items:center;justify-content:center}
+.ai-title{font-weight:700;font-size:.95rem}
+.ai-body{font-size:.85rem;line-height:1.7;color:var(--gl)}
+.ai-body p{margin-bottom:.75rem}
+.ai-body strong{color:var(--w)}
+.badge{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .75rem;background:rgba(34,197,94,.2);border:1px solid var(--ok);border-radius:50px;color:var(--ok);font-weight:600;font-size:.8rem;margin-top:.5rem}
+.tbl-wrap{overflow-x:auto;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.75rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.05)}
+th{background:rgba(99,102,241,.1);color:#818cf8;font-weight:600}
+th:first-child{width:130px}
+.win{background:rgba(34,197,94,.1);color:var(--ok);font-weight:600}
+.col-head{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.col-head img{width:50px;height:50px;object-fit:contain}
+.col-head span{font-size:.75rem;text-align:center}
+.pc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:1.5rem}
+.pc-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem}
+.pc-card h4{display:flex;align-items:center;gap:.4rem;font-size:.85rem;margin-bottom:.75rem}
+.pc-card h4 img{width:26px;height:26px;object-fit:contain}
+.pc-list{list-style:none;font-size:.8rem;color:var(--gl)}
+.pc-list li{padding:.3rem 0;display:flex;align-items:flex-start;gap:.4rem}
+.pc-list.pro li::before{content:'✓';color:var(--ok)}
+.pc-list.con li::before{content:'✗';color:var(--err)}
+.verdict{background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(20,184,166,.1));border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:1.5rem;text-align:center}
+.verdict h3{font-size:1rem;margin-bottom:.75rem}
+.verdict-name{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.verdict p{font-size:.85rem;color:var(--gl);max-width:550px;margin:0 auto}
+.chart-box{background:rgba(255,255,255,.03);border-radius:14px;padding:1rem;margin-bottom:1.5rem}
+.chart-box h4{font-size:.9rem;margin-bottom:.75rem}
+.loading{display:none;position:fixed;inset:0;background:rgba(15,23,42,.95);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
+.loading.show{display:flex}
+.spinner{width:50px;height:50px;border:3px solid rgba(99,102,241,.2);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--gl);font-size:.9rem}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}.card-img{height:100px}.search-box{max-width:100%;order:3;width:100%}}
+</style>
+</head>
+<body>
+<header>
+<nav>
+<div class="logo"><i class="fas fa-bolt"></i><span>Compfu AI</span></div>
+<div class="search-box"><input type="text" id="search" placeholder="Search products..." oninput="filter()"><button><i class="fas fa-search"></i></button></div>
+</nav>
+</header>
+<div class="cats" id="cats"></div>
+<div class="brands"><div class="brands-title">Popular Brands</div><div class="brands-list" id="brands"></div></div>
+<main><div class="grid" id="grid"></div></main>
+<div class="bar" id="bar"><div class="bar-inner"><div class="bar-items" id="barItems"></div><button class="bar-btn" id="barBtn" onclick="compare()" disabled><i class="fas fa-balance-scale"></i>Compare (<span id="cnt">0</span>)</button></div></div>
+<div class="overlay" id="overlay"><div class="modal"><div class="modal-head"><h2><i class="fas fa-chart-bar"></i> Comparison Results</h2><button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="results"></div></div></div>
+<div class="loading" id="loading"><div class="spinner"></div><p>Compfu AI is analyzing...</p></div>
+<script>
+const B=[
+{n:'Apple',l:'https://logo.clearbit.com/apple.com'},
+{n:'Samsung',l:'https://logo.clearbit.com/samsung.com'},
+{n:'LG',l:'https://logo.clearbit.com/lg.com'},
+{n:'Sony',l:'https://logo.clearbit.com/sony.com'},
+{n:'Dell',l:'https://logo.clearbit.com/dell.com'},
+{n:'HP',l:'https://logo.clearbit.com/hp.com'},
+{n:'Lenovo',l:'https://logo.clearbit.com/lenovo.com'},
+{n:'Google',l:'https://logo.clearbit.com/google.com'},
+{n:'OnePlus',l:'https://logo.clearbit.com/oneplus.com'},
+{n:'Xiaomi',l:'https://logo.clearbit.com/xiaomi.com'},
+{n:'Whirlpool',l:'https://logo.clearbit.com/whirlpool.com'},
+{n:'Bosch',l:'https://logo.clearbit.com/bosch.com'},
+{n:'Haier',l:'https://logo.clearbit.com/haier.com'},
+{n:'Dyson',l:'https://logo.clearbit.com/dyson.com'},
+{n:'Canon',l:'https://logo.clearbit.com/canon.com'},
+{n:'Nikon',l:'https://logo.clearbit.com/nikon.com'},
+{n:'Bose',l:'https://logo.clearbit.com/bose.com'},
+{n:'JBL',l:'https://logo.clearbit.com/jbl.com'}
+];
+const C=[
+{id:'all',n:'All Products',i:'fa-th'},
+{id:'phones',n:'Phones',i:'fa-mobile-alt'},
+{id:'laptops',n:'Laptops',i:'fa-laptop'},
+{id:'tvs',n:'TVs',i:'fa-tv'},
+{id:'fridges',n:'Refrigerators',i:'fa-snowflake'},
+{id:'washers',n:'Washers',i:'fa-tshirt'},
+{id:'ac',n:'Air Conditioners',i:'fa-wind'},
+{id:'audio',n:'Audio',i:'fa-headphones'},
+{id:'cameras',n:'Cameras',i:'fa-camera'},
+{id:'gaming',n:'Gaming',i:'fa-gamepad'}
+];
+const P=[
+// PHONES
+{id:1,n:'iPhone 15 Pro Max',b:'Apple',c:'phones',p:1199,r:4.8,rv:18420,img:'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro-max.jpg',s:{Display:'6.7" OLED 120Hz',Chip:'A17 Pro',RAM:'8GB',Storage:'256GB-1TB',Camera:'48+12+12MP',Battery:'4422mAh'}},
+{id:2,n:'iPhone 15 Pro',b:'Apple',c:'phones',p:999,r:4.8,rv:15230,img:'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg',s:{Display:'6.1" OLED 120Hz',Chip:'A17 Pro',RAM:'8GB',Storage:'128GB-1TB',Camera:'48+12+12MP',Battery:'3274mAh'}},
+{id:3,n:'iPhone 15',b:'Apple',c:'phones',p:799,r:4.7,rv:22100,img:'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15.jpg',s:{Display:'6.1" OLED 60Hz',Chip:'A16 Bionic',RAM:'6GB',Storage:'128GB-512GB',Camera:'48+12MP',Battery:'3349mAh'}},
+{id:4,n:'iPhone 14',b:'Apple',c:'phones',p:699,r:4.6,rv:28500,img:'https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-14.jpg',s:{Display:'6.1" OLED 60Hz',Chip:'A15 Bionic',RAM:'6GB',Storage:'128GB-512GB',Camera:'12+12MP',Battery:'3279mAh'}},
+{id:5,n:'Galaxy S24 Ultra',b:'Samsung',c:'phones',p:1299,r:4.7,rv:12870,img:'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g.jpg',s:{Display:'6.8" AMOLED 120Hz',Chip:'Snapdragon 8 Gen 3',RAM:'12GB',Storage:'256GB-1TB',Camera:'200+50+12+10MP',Battery:'5000mAh'}},
+{id:6,n:'Galaxy S24+',b:'Samsung',c:'phones',p:999,r:4.6,rv:8540,img:'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-plus-5g.jpg',s:{Display:'6.7" AMOLED 120Hz',Chip:'Snapdragon 8 Gen 3',RAM:'12GB',Storage:'256GB-512GB',Camera:'50+12+10MP',Battery:'4900mAh'}},
+{id:7,n:'Galaxy S24',b:'Samsung',c:'phones',p:799,r:4.5,rv:11230,img:'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-5g.jpg',s:{Display:'6.2" AMOLED 120Hz',Chip:'Exynos 2400',RAM:'8GB',Storage:'128GB-256GB',Camera:'50+12+10MP',Battery:'4000mAh'}},
+{id:8,n:'Galaxy Z Fold 5',b:'Samsung',c:'phones',p:1799,r:4.5,rv:6780,img:'https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-z-fold5.jpg',s:{Display:'7.6" Foldable AMOLED',Chip:'Snapdragon 8 Gen 2',RAM:'12GB',Storage:'256GB-1TB',Camera:'50+12+10MP',Battery:'4400mAh'}},
+{id:9,n:'Pixel 8 Pro',b:'Google',c:'phones',p:999,r:4.6,rv:7620,img:'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro-new.jpg',s:{Display:'6.7" OLED 120Hz',Chip:'Tensor G3',RAM:'12GB',Storage:'128GB-1TB',Camera:'50+48+48MP',Battery:'5050mAh'}},
+{id:10,n:'Pixel 8',b:'Google',c:'phones',p:699,r:4.5,rv:9870,img:'https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8.jpg',s:{Display:'6.2" OLED 120Hz',Chip:'Tensor G3',RAM:'8GB',Storage:'128GB-256GB',Camera:'50+12MP',Battery:'4575mAh'}},
+{id:11,n:'OnePlus 12',b:'OnePlus',c:'phones',p:799,r:4.5,rv:5430,img:'https://fdn2.gsmarena.com/vv/bigpic/oneplus-12-.jpg',s:{Display:'6.82" AMOLED 120Hz',Chip:'Snapdragon 8 Gen 3',RAM:'12-16GB',Storage:'256GB-512GB',Camera:'50+48+64MP',Battery:'5400mAh'}},
+{id:12,n:'Xiaomi 14 Ultra',b:'Xiaomi',c:'phones',p:1199,r:4.6,rv:3240,img:'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14-ultra.jpg',s:{Display:'6.73" AMOLED 120Hz',Chip:'Snapdragon 8 Gen 3',RAM:'16GB',Storage:'256GB-512GB',Camera:'50+50+50+50MP',Battery:'5000mAh'}},
+{id:13,n:'Xiaomi 14',b:'Xiaomi',c:'phones',p:799,r:4.5,rv:4560,img:'https://fdn2.gsmarena.com/vv/bigpic/xiaomi-14.jpg',s:{Display:'6.36" AMOLED 120Hz',Chip:'Snapdragon 8 Gen 3',RAM:'12GB',Storage:'256GB-512GB',Camera:'50+50+50MP',Battery:'4610mAh'}},
+// LAPTOPS
+{id:14,n:'MacBook Pro 16 M3 Max',b:'Apple',c:'laptops',p:3499,r:4.9,rv:5620,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp16-spacegray-select-202310?wid=400&fmt=png-alpha',s:{Display:'16.2" Liquid Retina XDR',Chip:'M3 Max',RAM:'36GB',Storage:'1TB SSD',GPU:'40-core',Battery:'22 hours'}},
+{id:15,n:'MacBook Pro 14 M3 Pro',b:'Apple',c:'laptops',p:1999,r:4.9,rv:8930,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp14-spacegray-select-202310?wid=400&fmt=png-alpha',s:{Display:'14.2" Liquid Retina XDR',Chip:'M3 Pro',RAM:'18GB',Storage:'512GB SSD',GPU:'14-core',Battery:'17 hours'}},
+{id:16,n:'MacBook Air 15 M3',b:'Apple',c:'laptops',p:1299,r:4.8,rv:11240,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mba15-midnight-select-202306?wid=400&fmt=png-alpha',s:{Display:'15.3" Liquid Retina',Chip:'M3',RAM:'8GB',Storage:'256GB SSD',GPU:'10-core',Battery:'18 hours'}},
+{id:17,n:'MacBook Air 13 M3',b:'Apple',c:'laptops',p:1099,r:4.8,rv:14560,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mba13-midnight-select-202402?wid=400&fmt=png-alpha',s:{Display:'13.6" Liquid Retina',Chip:'M3',RAM:'8GB',Storage:'256GB SSD',GPU:'8-core',Battery:'18 hours'}},
+{id:18,n:'Dell XPS 15',b:'Dell',c:'laptops',p:1799,r:4.6,rv:6430,img:'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-15-9530/media-gallery/touch/notebook-xps-15-9530-t-gallery-1.psd?fmt=png-alpha&wid=400',s:{Display:'15.6" OLED 3.5K',Chip:'Intel i7-13700H',RAM:'16GB',Storage:'512GB SSD',GPU:'RTX 4050',Battery:'13 hours'}},
+{id:19,n:'Dell XPS 13 Plus',b:'Dell',c:'laptops',p:1299,r:4.5,rv:4120,img:'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-13-9320/media-gallery/xs9320t-xnb-shot01-sl.psd?fmt=png-alpha&wid=400',s:{Display:'13.4" OLED 3.5K',Chip:'Intel i7-1360P',RAM:'16GB',Storage:'512GB SSD',GPU:'Iris Xe',Battery:'13 hours'}},
+{id:20,n:'HP Spectre x360 16',b:'HP',c:'laptops',p:1649,r:4.6,rv:3870,img:'https://ssl-product-images.www8-hp.com/digmedialib/prodimg/lowres/c08481224.png',s:{Display:'16" OLED 3K+ Touch',Chip:'Intel i7-13700H',RAM:'16GB',Storage:'1TB SSD',GPU:'Arc A370M',Battery:'17 hours'}},
+{id:21,n:'ThinkPad X1 Carbon Gen 11',b:'Lenovo',c:'laptops',p:1649,r:4.7,rv:5230,img:'https://p1-ofp.static.pub/fes/cms/2022/08/31/2pmk8pqbrh3bx4dqk2s3k8q7k4k5ty164143.png',s:{Display:'14" 2.8K OLED',Chip:'Intel i7-1365U',RAM:'16GB',Storage:'512GB SSD',GPU:'Iris Xe',Battery:'15 hours'}},
+{id:22,n:'Galaxy Book4 Ultra',b:'Samsung',c:'laptops',p:2399,r:4.5,rv:2340,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/np960xgl-xg2uk/gallery/uk-galaxy-book4-ultra-np960-np960xgl-xg2uk-thumb-539492401?fmt=png-alpha&wid=400',s:{Display:'16" 3K AMOLED',Chip:'Intel Ultra 9',RAM:'32GB',Storage:'1TB SSD',GPU:'RTX 4070',Battery:'18 hours'}},
+// TVs
+{id:23,n:'Samsung S95D 65" QD-OLED',b:'Samsung',c:'tvs',p:2999,r:4.8,rv:1890,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/qe65s95datxxu/gallery/uk-oled-s95d-qe65s95datxxu-thumb-539694044?fmt=png-alpha&wid=400',s:{Display:'65" QD-OLED 4K',HDR:'HDR10+, Dolby Vision',Refresh:'144Hz',Smart:'Tizen',Sound:'60W 4.2.2ch',HDMI:'4x HDMI 2.1'}},
+{id:24,n:'Samsung S90D 55" OLED',b:'Samsung',c:'tvs',p:1699,r:4.7,rv:3240,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/qe55s90datxxu/gallery/uk-oled-s90d-qe55s90datxxu-thumb-539693928?fmt=png-alpha&wid=400',s:{Display:'55" OLED 4K',HDR:'HDR10+, HLG',Refresh:'120Hz',Smart:'Tizen',Sound:'40W 2.0ch',HDMI:'4x HDMI 2.1'}},
+{id:25,n:'LG C4 65" OLED evo',b:'LG',c:'tvs',p:2499,r:4.8,rv:2870,img:'https://www.lg.com/us/images/tvs/md08004436/gallery/D-01.jpg',s:{Display:'65" OLED evo 4K',HDR:'Dolby Vision, HDR10',Refresh:'120Hz',Smart:'webOS 24',Sound:'40W AI Sound',HDMI:'4x HDMI 2.1'}},
+{id:26,n:'LG G4 77" OLED evo',b:'LG',c:'tvs',p:3999,r:4.9,rv:1230,img:'https://www.lg.com/us/images/tvs/md08004434/gallery/D-01.jpg',s:{Display:'77" OLED evo 4K',HDR:'Dolby Vision, HDR10',Refresh:'120Hz',Smart:'webOS 24',Sound:'60W 4.2ch',HDMI:'4x HDMI 2.1'}},
+{id:27,n:'Sony Bravia XR A95L 65"',b:'Sony',c:'tvs',p:3499,r:4.9,rv:980,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/Primary_image-5?fmt=png-alpha&wid=400',s:{Display:'65" QD-OLED 4K',HDR:'Dolby Vision, IMAX',Refresh:'120Hz',Smart:'Google TV',Sound:'60W Acoustic',HDMI:'4x HDMI 2.1'}},
+{id:28,n:'Sony Bravia X90L 55"',b:'Sony',c:'tvs',p:1299,r:4.6,rv:4560,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/Primary_image_X90L-2?fmt=png-alpha&wid=400',s:{Display:'55" LED 4K',HDR:'Dolby Vision, HDR10',Refresh:'120Hz',Smart:'Google TV',Sound:'20W X-Balanced',HDMI:'2x HDMI 2.1'}},
+// REFRIGERATORS
+{id:29,n:'Samsung Bespoke 4-Door',b:'Samsung',c:'fridges',p:3299,r:4.6,rv:2890,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/rf65a967541-eu/gallery/uk-bespoke-rf65a967541-eu-531180803?fmt=png-alpha&wid=400',s:{Capacity:'641L',Type:'French Door',Features:'Family Hub, AI',Cooling:'Triple Cooling',Energy:'A+',Color:'Custom'}},
+{id:30,n:'Samsung Family Hub',b:'Samsung',c:'fridges',p:2999,r:4.5,rv:3450,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/rf65a977fb1-eu/gallery/uk-family-hub-rf65a977fb1-eu-thumb-530766791?fmt=png-alpha&wid=400',s:{Capacity:'616L',Type:'French Door',Features:'21" Screen, AI',Cooling:'Metal Cooling',Energy:'A+',Color:'Black Steel'}},
+{id:31,n:'LG InstaView Door-in-Door',b:'LG',c:'fridges',p:2999,r:4.7,rv:3780,img:'https://www.lg.com/us/images/refrigerators/md08003622/gallery/D-01.jpg',s:{Capacity:'635L',Type:'Side-by-Side',Features:'InstaView, ThinQ',Cooling:'Linear Cooling',Energy:'A++',Color:'Steel'}},
+{id:32,n:'LG French Door InstaView',b:'LG',c:'fridges',p:3499,r:4.7,rv:2340,img:'https://www.lg.com/us/images/refrigerators/md08003616/gallery/D-01.jpg',s:{Capacity:'708L',Type:'French Door',Features:'InstaView, Craft Ice',Cooling:'Linear Cooling',Energy:'A+',Color:'Steel'}},
+{id:33,n:'Whirlpool French Door WRF757',b:'Whirlpool',c:'fridges',p:2199,r:4.4,rv:5670,img:'https://kitchenaid-h.assetsadobe.com/is/image/content/dam/business-unit/whirlpoolv2/en-us/marketing-content/site-assets/page-content/oc-product-quadsplit-702702701701702702702702702702702702/quadsplit-primary.png?fmt=png-alpha&wid=400',s:{Capacity:'752L',Type:'French Door',Features:'Fingerprint Resist',Cooling:'Accu-Chill',Energy:'A+',Color:'Steel'}},
+{id:34,n:'Bosch Serie 6 KGN39',b:'Bosch',c:'fridges',p:1299,r:4.5,rv:3890,img:'https://media3.bosch-home.com/Product_Shots/600x337/KGN39AIAT_def.png',s:{Capacity:'363L',Type:'Bottom Freezer',Features:'VitaFresh, NoFrost',Cooling:'MultiAirFlow',Energy:'A',Color:'Inox'}},
+{id:35,n:'Haier HB20FPAAA',b:'Haier',c:'fridges',p:1799,r:4.3,rv:2120,img:'https://www.haier.com/content/dam/haier/uk/refrigerators/french-door/hb20fpaaa/HB20FPAAA_01.png',s:{Capacity:'454L',Type:'Multi Door',Features:'MyZone, No Frost',Cooling:'Multi Air Flow',Energy:'A++',Color:'Silver'}},
+// WASHING MACHINES
+{id:36,n:'Samsung Bespoke AI 11kg',b:'Samsung',c:'washers',p:1599,r:4.7,rv:2340,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/ww11bb944dgbs1/gallery/uk-bespoke-ai-ww11bb944dgbs1-536656461?fmt=png-alpha&wid=400',s:{Capacity:'11kg',Type:'Front Load',Features:'AI Control, EcoBubble',Spin:'1400 RPM',Energy:'A',Noise:'70dB'}},
+{id:37,n:'Samsung AddWash 9kg',b:'Samsung',c:'washers',p:899,r:4.5,rv:5670,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/ww90t554dan-s1/gallery/uk-full-auto-washer-ww90t554dan-s1-thumb-368346374?fmt=png-alpha&wid=400',s:{Capacity:'9kg',Type:'Front Load',Features:'AddWash Door',Spin:'1400 RPM',Energy:'A+++',Noise:'72dB'}},
+{id:38,n:'LG TurboWash 360 12kg',b:'LG',c:'washers',p:1299,r:4.6,rv:4230,img:'https://www.lg.com/us/images/washers/md08001592/gallery/D-01.jpg',s:{Capacity:'12kg',Type:'Front Load',Features:'TurboWash, AI DD',Spin:'1400 RPM',Energy:'A+++',Noise:'68dB'}},
+{id:39,n:'LG TWINWash',b:'LG',c:'washers',p:1799,r:4.5,rv:2890,img:'https://www.lg.com/us/images/washers/md07902543/gallery/D-01.jpg',s:{Capacity:'13kg + 2kg',Type:'Front + Mini',Features:'TwinWash, Steam',Spin:'1400 RPM',Energy:'A',Noise:'70dB'}},
+{id:40,n:'Bosch Serie 8 10kg',b:'Bosch',c:'washers',p:1099,r:4.5,rv:3450,img:'https://media3.bosch-home.com/Product_Shots/600x337/WAX32GH4GB_def.png',s:{Capacity:'10kg',Type:'Front Load',Features:'i-DOS, HomeConnect',Spin:'1600 RPM',Energy:'A',Noise:'71dB'}},
+{id:41,n:'Whirlpool Supreme Care 9kg',b:'Whirlpool',c:'washers',p:899,r:4.4,rv:5120,img:'https://kitchenaid-h.assetsadobe.com/is/image/content/dam/business-unit/whirlpoolv2/en-us/marketing-content/site-assets/page-content/oc-product-quadsplit-702702701701702702702702702702702702/quadsplit-primary.png?fmt=png-alpha&wid=400',s:{Capacity:'9kg',Type:'Front Load',Features:'6th Sense, FreshCare+',Spin:'1400 RPM',Energy:'A+++',Noise:'66dB'}},
+// AIR CONDITIONERS
+{id:42,n:'Samsung WindFree 12000BTU',b:'Samsung',c:'ac',p:1299,r:4.6,rv:2340,img:'https://images.samsung.com/is/image/samsung/p6pim/in/ar12cy3arwknna/gallery/in-windfree-wall-mount-ar12cy3arwknna-531673366?fmt=png-alpha&wid=400',s:{Capacity:'12000 BTU',Type:'Split',Features:'WindFree, AI Auto',Cooling:'Fast Cooling',Energy:'A++',Noise:'19dB'}},
+{id:43,n:'Samsung WindFree 18000BTU',b:'Samsung',c:'ac',p:1699,r:4.6,rv:1870,img:'https://images.samsung.com/is/image/samsung/p6pim/in/ar18cy3arwknna/gallery/in-windfree-wall-mount-ar18cy3arwknna-531673384?fmt=png-alpha&wid=400',s:{Capacity:'18000 BTU',Type:'Split',Features:'WindFree, WiFi',Cooling:'Fast Cooling',Energy:'A++',Noise:'21dB'}},
+{id:44,n:'LG DualCool 12000BTU',b:'LG',c:'ac',p:1199,r:4.5,rv:3120,img:'https://www.lg.com/us/images/air-conditioners/md07900034/gallery/D-01.jpg',s:{Capacity:'12000 BTU',Type:'Split',Features:'Dual Inverter, ThinQ',Cooling:'Fast Cooling',Energy:'A+++',Noise:'20dB'}},
+{id:45,n:'LG DualCool 18000BTU',b:'LG',c:'ac',p:1599,r:4.5,rv:2340,img:'https://www.lg.com/us/images/air-conditioners/md07900034/gallery/D-01.jpg',s:{Capacity:'18000 BTU',Type:'Split',Features:'Dual Inverter, ThinQ',Cooling:'Fast Cooling',Energy:'A+++',Noise:'22dB'}},
+{id:46,n:'Dyson Pure Cool TP07',b:'Dyson',c:'ac',p:649,r:4.4,rv:4560,img:'https://dyson-h.assetsadobe2.com/is/image/content/dam/dyson/images/products/primary/369702-01.png?fmt=png-alpha&wid=400',s:{Capacity:'N/A',Type:'Tower Fan/Purifier',Features:'HEPA, Air Purifier',Cooling:'Air Multiplier',Energy:'A',Noise:'62dB'}},
+// AUDIO
+{id:47,n:'Sony WH-1000XM5',b:'Sony',c:'audio',p:399,r:4.8,rv:18920,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/01_WH1000XM5_B_std?fmt=png-alpha&wid=400',s:{Type:'Over-ear',Driver:'30mm',ANC:'Industry Leading',Battery:'30 hours',Weight:'250g',Codec:'LDAC, AAC'}},
+{id:48,n:'Sony WH-1000XM4',b:'Sony',c:'audio',p:299,r:4.7,rv:28450,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/01_WH1000XM4_black?fmt=png-alpha&wid=400',s:{Type:'Over-ear',Driver:'40mm',ANC:'Excellent',Battery:'30 hours',Weight:'254g',Codec:'LDAC, AAC'}},
+{id:49,n:'Apple AirPods Max',b:'Apple',c:'audio',p:549,r:4.6,rv:10230,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-max-select-spacegray-202011?wid=400&fmt=png-alpha',s:{Type:'Over-ear',Driver:'40mm Custom',ANC:'Excellent',Battery:'20 hours',Weight:'384g',Codec:'AAC'}},
+{id:50,n:'Apple AirPods Pro 2',b:'Apple',c:'audio',p:249,r:4.7,rv:32450,img:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-pro-2-hero-select-202409?wid=400&fmt=png-alpha',s:{Type:'In-ear TWS',Driver:'Custom H2',ANC:'Adaptive',Battery:'6h (30h case)',Weight:'5.3g each',Codec:'AAC'}},
+{id:51,n:'Samsung Galaxy Buds3 Pro',b:'Samsung',c:'audio',p:249,r:4.5,rv:5670,img:'https://images.samsung.com/is/image/samsung/p6pim/uk/sm-r630nzaaeub/gallery/uk-galaxy-buds3-pro-sm-r630-sm-r630nzaaeub-thumb-539649219?fmt=png-alpha&wid=400',s:{Type:'In-ear TWS',Driver:'10.5mm Dual',ANC:'Intelligent',Battery:'6h (30h case)',Weight:'5.4g each',Codec:'SSC, AAC'}},
+{id:52,n:'Bose QuietComfort Ultra',b:'Bose',c:'audio',p:429,r:4.7,rv:7890,img:'https://assets.bose.com/content/dam/cloudassets/Bose_DAM/Web/consumer_electronics/global/products/headphones/qc_ultra_headphones/product_silo_images/QCUltra_HS_black_EC_hero.png?wid=400',s:{Type:'Over-ear',Driver:'35mm TriPort',ANC:'CustomTune',Battery:'24 hours',Weight:'250g',Codec:'aptX'}},
+{id:53,n:'Bose QuietComfort 45',b:'Bose',c:'audio',p:329,r:4.6,rv:12340,img:'https://assets.bose.com/content/dam/cloudassets/Bose_DAM/Web/consumer_electronics/global/products/headphones/qc45/product_silo_images/QC45_PDP_Ecom-Gallery-B03.png?wid=400',s:{Type:'Over-ear',Driver:'35mm',ANC:'Excellent',Battery:'24 hours',Weight:'240g',Codec:'AAC, SBC'}},
+{id:54,n:'JBL Live 770NC',b:'JBL',c:'audio',p:199,r:4.4,rv:8970,img:'https://www.jbl.com/dw/image/v2/BFND_PRD/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw9e5e4d72/JBL_LIVE_770NC_Product%20Image_Hero_Black.png?sw=400',s:{Type:'Over-ear',Driver:'40mm',ANC:'Adaptive',Battery:'65 hours',Weight:'252g',Codec:'AAC, SBC'}},
+// CAMERAS
+{id:55,n:'Sony A7 IV',b:'Sony',c:'cameras',p:2499,r:4.8,rv:4560,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/Primary_image-8?fmt=png-alpha&wid=400',s:{Sensor:'33MP Full-Frame',Video:'4K 60fps',AF:'759 points',Stabilization:'5-axis IBIS',ISO:'100-51200',Screen:'3" Vari-angle'}},
+{id:56,n:'Sony A7C II',b:'Sony',c:'cameras',p:2199,r:4.7,rv:2890,img:'https://sony.scene7.com/is/image/sonyglobalsolutions/01_ILCE-7CM2_black_front?fmt=png-alpha&wid=400',s:{Sensor:'33MP Full-Frame',Video:'4K 60fps',AF:'759 points',Stabilization:'5-axis IBIS',ISO:'100-51200',Screen:'3" Vari-angle'}},
+{id:57,n:'Canon EOS R6 Mark II',b:'Canon',c:'cameras',p:2499,r:4.8,rv:3450,img:'https://i1.adis.ws/i/canon/eos-r6-mark-ii-rf24-105mm-f4-7.1-is-stm-3q-front_a01a5c96a53d42c5a5c62cdc1d3b2e81?fmt=png-alpha&w=400',s:{Sensor:'24.2MP Full-Frame',Video:'4K 60fps',AF:'1053 points',Stabilization:'8-stop IBIS',ISO:'100-102400',Screen:'3" Vari-angle'}},
+{id:58,n:'Canon EOS R8',b:'Canon',c:'cameras',p:1499,r:4.6,rv:4120,img:'https://i1.adis.ws/i/canon/eos-r8-rf24-50mm-f4.5-6.3-is-stm-3q-front_3f22a3ef3a9b4e3fbcb4cb3a8f5b8a8c?fmt=png-alpha&w=400',s:{Sensor:'24.2MP Full-Frame',Video:'4K 60fps',AF:'1053 points',Stabilization:'Lens only',ISO:'100-102400',Screen:'3" Vari-angle'}},
+{id:59,n:'Nikon Z8',b:'Nikon',c:'cameras',p:3999,r:4.9,rv:1890,img:'https://cdn-4.nikon-cdn.com/e/Q5NM96RZZo-YRYNeYvAi9beHK4x3L-8go_p7JUL6JpQ3EkO-T_OEcJ0hUTzHA4DcVQvr-6ZlMdlBAhkxYrYjqLW6tGJUHfls/Views/1653_Z8_front34l.png',s:{Sensor:'45.7MP Full-Frame',Video:'8K 30fps',AF:'493 points',Stabilization:'5-axis IBIS',ISO:'64-25600',Screen:'3.2" Tilt'}},
+{id:60,n:'Nikon Z6 III',b:'Nikon',c:'cameras',p:2499,r:4.7,rv:2340,img:'https://cdn-4.nikon-cdn.com/e/Q5NM96RZZo-YRYNeYvAi9beHK4x3L-8go_p7JUL6JpQ3EkO-T_OEcJ0hUTzHA4Dc/Views/1768_Z6III_front_34l.png',s:{Sensor:'24.5MP Full-Frame',Video:'6K 60fps',AF:'299 points',Stabilization:'5-axis IBIS',ISO:'100-64000',Screen:'3.2" Vari-angle'}},
+// GAMING
+{id:61,n:'PlayStation 5',b:'Sony',c:'gaming',p:499,r:4.8,rv:32450,img:'https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21?fmt=png-alpha&wid=400',s:{CPU:'AMD Zen 2 8-core',GPU:'10.28 TFLOPS',RAM:'16GB GDDR6',Storage:'825GB SSD',Output:'4K 120fps',Features:'Ray Tracing, 3D Audio'}},
+{id:62,n:'PlayStation 5 Slim',b:'Sony',c:'gaming',p:449,r:4.7,rv:8970,img:'https://gmedia.playstation.com/is/image/SIEPDC/ps5-slim-edition-family-image-block-01-en-07aug24?fmt=png-alpha&wid=400',s:{CPU:'AMD Zen 2 8-core',GPU:'10.28 TFLOPS',RAM:'16GB GDDR6',Storage:'1TB SSD',Output:'4K 120fps',Features:'30% Smaller'}},
+{id:63,n:'Xbox Series X',b:'Microsoft',c:'gaming',p:499,r:4.7,rv:24560,img:'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE4mRni?ver=bfb7&q=90&m=6&h=270&w=270&b=%23FFFFFFFF&f=jpg&o=f&aim=true',s:{CPU:'AMD Zen 2 8-core',GPU:'12 TFLOPS',RAM:'16GB GDDR6',Storage:'1TB SSD',Output:'4K 120fps',Features:'Quick Resume'}},
+{id:64,n:'Xbox Series S',b:'Microsoft',c:'gaming',p:299,r:4.5,rv:18970,img:'https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE4mQhU?ver=e356&q=90&m=6&h=270&w=270&b=%23FFFFFFFF&f=jpg&o=f&aim=true',s:{CPU:'AMD Zen 2 8-core',GPU:'4 TFLOPS',RAM:'10GB GDDR6',Storage:'512GB SSD',Output:'1440p 120fps',Features:'All-Digital'}},
+{id:65,n:'Nintendo Switch OLED',b:'Nintendo',c:'gaming',p:349,r:4.6,rv:38970,img:'https://assets.nintendo.com/image/upload/c_fill,w_400/q_auto/f_auto/ncom/en_US/switch/site-design-update/hardware/oled/white-background/swicth-oled-background',s:{CPU:'Tegra X1+',GPU:'Custom Nvidia',RAM:'4GB',Storage:'64GB',Output:'1080p Docked',Features:'7" OLED, Portable'}}
+];
+let sel=[],cat='all',brand='all';
+function init(){renderBrands();renderCats();render()}
+function renderBrands(){document.getElementById('brands').innerHTML=B.map(b=>`<div class="brand${brand===b.n?' on':''}" onclick="setBrand('${b.n}')"><img src="${b.l}" onerror="this.src='https://via.placeholder.com/32?text=${b.n[0]}'"><span>${b.n}</span></div>`).join('')}
+function renderCats(){document.getElementById('cats').innerHTML=C.map(c=>`<div class="cat${cat===c.id?' on':''}" onclick="setCat('${c.id}')"><i class="fas ${c.i}"></i>${c.n}</div>`).join('')}
+function render(){
+let f=P;
+if(cat!=='all')f=f.filter(p=>p.c===cat);
+if(brand!=='all')f=f.filter(p=>p.b===brand);
+let q=document.getElementById('search').value.toLowerCase();
+if(q)f=f.filter(p=>p.n.toLowerCase().includes(q)||p.b.toLowerCase().includes(q));
+document.getElementById('grid').innerHTML=f.map(p=>`<div class="card${sel.includes(p.id)?' sel':''}" onclick="toggle(${p.id})"><div class="card-img"><img src="${p.img}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=${encodeURIComponent(p.n)}'"></div><div class="card-body"><div class="card-brand">${p.b}</div><div class="card-name">${p.n}</div><div class="card-price">$${p.p.toLocaleString()}</div><div class="card-rating">${'★'.repeat(Math.floor(p.r))}${p.r%1>=.5?'½':''}${'☆'.repeat(5-Math.ceil(p.r))} <span>(${p.rv.toLocaleString()})</span></div></div></div>`).join('')}
+function setCat(c){cat=c;renderCats();render()}
+function setBrand(b){brand=brand===b?'all':b;renderBrands();render()}
+function filter(){render()}
+function toggle(id){if(sel.includes(id))sel=sel.filter(i=>i!==id);else if(sel.length<4)sel.push(id);updateBar();render()}
+function updateBar(){const bar=document.getElementById('bar'),items=document.getElementById('barItems'),btn=document.getElementById('barBtn'),cnt=document.getElementById('cnt');if(sel.length){bar.classList.add('show');items.innerHTML=sel.map(id=>{const p=P.find(x=>x.id===id);return`<div class="bar-item"><img src="${p.img}" onerror="this.style.display='none'"><span>${p.n.substring(0,15)}...</span><span class="x" onclick="event.stopPropagation();toggle(${id})">×</span></div>`}).join('');cnt.textContent=sel.length;btn.disabled=sel.length<2}else bar.classList.remove('show')}
+async function compare(){if(sel.length<2)return;document.getElementById('loading').classList.add('show');await new Promise(r=>setTimeout(r,1500));document.getElementById('loading').classList.remove('show');genResults()}
+function genResults(){
+const ps=sel.map(id=>P.find(p=>p.id===id));
+const w=ps.reduce((a,b)=>(a.r*Math.log(a.rv))>(b.r*Math.log(b.rv))?a:b);
+const ch=ps.reduce((a,b)=>a.p<b.p?a:b);
+const bv=ps.reduce((a,b)=>(a.r/a.p)>(b.r/b.p)?a:b);
+const tr=ps.reduce((a,b)=>a+b.rv,0);
+const sp=Object.keys(ps[0].s);
+document.getElementById('results').innerHTML=`
+<div class="ai-box">
+<div class="ai-head"><div class="ai-ico"><i class="fas fa-robot"></i></div><div class="ai-title">Compfu AI Analysis</div></div>
+<div class="ai-body">
+<p><strong>📊 Comprehensive Analysis of ${ps.length} Products</strong></p>
+<p>After analyzing <strong>${tr.toLocaleString()} user reviews</strong>, technical specifications, market trends, and value metrics, here's our detailed comparison:</p>
+<p><strong>🏆 Winner: ${w.n}</strong> - With an exceptional ${w.r}/5 rating from ${w.rv.toLocaleString()} verified reviews, this product leads in overall user satisfaction. ${w.b}'s commitment to quality is evident throughout.</p>
+<p><strong>💰 Best Value: ${bv.n}</strong> - At $${bv.p.toLocaleString()}, this offers the optimal price-to-performance ratio ($${(bv.p/bv.r).toFixed(0)} per rating point). Perfect for budget-conscious buyers who don't want to compromise on quality.</p>
+${ch!==bv&&ch!==w?`<p><strong>💵 Most Affordable: ${ch.n}</strong> - At just $${ch.p.toLocaleString()}, this is the entry point into the category with solid ${ch.r}/5 ratings.</p>`:''}
+<p><strong>🔍 Key Differences:</strong></p>
+<p>• <strong>${sp[0]}:</strong> ${ps.map(p=>`${p.b}: ${p.s[sp[0]]}`).join(' vs ')}</p>
+<p>• <strong>${sp[1]}:</strong> The ${w.n} leads with ${w.s[sp[1]]}, providing superior performance.</p>
+<p><strong>👤 Recommendations:</strong></p>
+<p>• <strong>Power Users:</strong> ${w.n} - Best overall performance and reliability</p>
+<p>• <strong>Value Seekers:</strong> ${bv.n} - Maximum features per dollar spent</p>
+${ch!==w?`<p>• <strong>Budget Buyers:</strong> ${ch.n} - Great entry-level option</p>`:''}
+<div class="badge"><i class="fas fa-trophy"></i> Best Overall: ${w.n}</div>
+</div>
+</div>
+<h4 style="margin-bottom:1rem;font-size:.95rem"><i class="fas fa-table"></i> Specifications Comparison</h4>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Feature</th>${ps.map(p=>`<th><div class="col-head"><img src="${p.img}" onerror="this.style.display='none'"><span>${p.n}</span></div></th>`).join('')}</tr></thead>
+<tbody>
+<tr><td><strong>Price</strong></td>${ps.map(p=>`<td class="${p===ch?'win':''}">$${p.p.toLocaleString()}${p===ch?' ✓':''}</td>`).join('')}</tr>
+<tr><td><strong>Rating</strong></td>${ps.map(p=>`<td class="${p===w?'win':''}">${p.r}/5 (${p.rv.toLocaleString()})${p===w?' ✓':''}</td>`).join('')}</tr>
+${sp.map(s=>`<tr><td><strong>${s}</strong></td>${ps.map(p=>`<td>${p.s[s]}</td>`).join('')}</tr>`).join('')}
+</tbody>
+</table>
+</div>
+<h4 style="margin-bottom:1rem;font-size:.95rem"><i class="fas fa-balance-scale"></i> Pros & Cons</h4>
+<div class="pc-grid">
+${ps.map(p=>`<div class="pc-card">
+<h4><img src="${p.img}" onerror="this.style.display='none'">${p.n}</h4>
+<ul class="pc-list pro">
+<li>${p.r>=4.7?'Exceptional':p.r>=4.5?'Excellent':'Good'} user ratings (${p.r}/5)</li>
+<li>Strong ${sp[0].toLowerCase()}: ${p.s[sp[0]]}</li>
+<li>${p.b} quality & warranty</li>
+<li>${p===bv?'Best value in comparison':p===ch?'Most affordable option':'Premium build quality'}</li>
+</ul>
+<ul class="pc-list con">
+<li>${p.p>1500?'Premium pricing':p.p>800?'Mid-range price':'May lack some premium features'}</li>
+<li>${p.b} ecosystem lock-in</li>
+</ul>
+</div>`).join('')}
+</div>
+<div class="chart-box"><h4><i class="fas fa-chart-bar"></i> Rating & Value Analysis</h4><canvas id="chart" height="180"></canvas></div>
+<div class="verdict">
+<h3><i class="fas fa-trophy"></i> Compfu AI Recommendation</h3>
+<div class="verdict-name">${w.n}</div>
+<p>Based on analysis of ${tr.toLocaleString()} reviews and comprehensive specifications, the <strong>${w.n}</strong> delivers the best overall experience with ${w.r}/5 user satisfaction. For budget-conscious buyers, the <strong>${bv.n}</strong> at $${bv.p.toLocaleString()} offers excellent value.</p>
+</div>`;
+document.getElementById('overlay').classList.add('show');
+setTimeout(()=>{new Chart(document.getElementById('chart'),{type:'bar',data:{labels:ps.map(p=>p.n.split(' ').slice(0,2).join(' ')),datasets:[{label:'Rating',data:ps.map(p=>p.r),backgroundColor:'rgba(99,102,241,.8)'},{label:'Value Score',data:ps.map(p=>(p.r/p.p*1000).toFixed(1)),backgroundColor:'rgba(236,72,153,.8)'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#94a3b8'}},x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#94a3b8',font:{size:10}}}}}})},100)}
+function closeModal(){document.getElementById('overlay').classList.remove('show')}
+init();
+</script>
+</body>
+</html>
